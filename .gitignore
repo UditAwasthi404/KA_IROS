@@ -3,13 +3,6 @@
 # dependencies
 brag-output/
 node_modules/
-docs/
-!docs/
-docs/*
-!docs/REVENUECAT_SUBSCRIPTIONS.md
-!docs/SHIPATON_NEXT_GEN.md
-!docs/shipaton-assets/
-!docs/shipaton-assets/**
 # Expo
 .expo/
 dist/

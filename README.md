@@ -10,6 +10,10 @@ Recall is **Kairos Pro**. Access is the RevenueCat entitlement `recall`. Develop
 | --- | --- |
 | `apps/mobile` | Expo / React Native app (`com.kairos.mobile`) |
 | `backend` | NestJS API, Prisma, Postgres |
+| `docs/PRODUCT.md` | Product overview for judges |
+| `docs/PRD.md` | Product requirements, scope, and free versus Pro |
+| `docs/TRD.md` | Technical requirements |
+| `docs/ARCHITECTURE.md` | System, data flows, and trust boundaries |
 | `docs/REVENUECAT_SUBSCRIPTIONS.md` | How Test Store, webhooks, and the `recall` entitlement fit together |
 | `docs/SHIPATON_NEXT_GEN.md` | Devpost copy, checklist, and the two-minute demo script |
 

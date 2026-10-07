@@ -189,7 +189,7 @@ const shouldRun =
       expect(hybridResults).toHaveLength(RETRIEVAL_BENCH_QUERIES.length);
     });
 
-    it('writes comparison artifact for docs/retrieval-benchmark.md', () => {
+    it('writes comparison artifact', () => {
       expect(baselineResults).toHaveLength(RETRIEVAL_BENCH_QUERIES.length);
       expect(hybridResults).toHaveLength(RETRIEVAL_BENCH_QUERIES.length);
 

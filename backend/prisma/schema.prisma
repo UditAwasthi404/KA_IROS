@@ -1,5 +1,5 @@
 // Kairos — observation understanding vertical slice.
-// Full future model: docs/DATA_MODEL.md
+// Data model overview: docs/ARCHITECTURE.md
 
 generator client {
   provider = "prisma-client-js"
