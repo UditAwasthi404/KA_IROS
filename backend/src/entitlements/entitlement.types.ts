@@ -43,18 +43,3 @@ export function isEntitlementStatusAllowed(
   return true;
 }
 
-/** Billing provider abstraction. RevenueCat covers App Store, Play, and Stripe. */
-export interface EntitlementProvider {
-  readonly name: string;
-  /**
-   * Optional remote refresh. Stub returns null (DB/config is source of truth).
-   */
-  resolveRemote?(
-    userId: string,
-    feature: EntitlementFeature,
-  ): Promise<{
-    status: EntitlementStatus;
-    validUntil: Date | null;
-    source: string;
-  } | null>;
-}

@@ -9,23 +9,21 @@ import {
   isEntitlementStatusAllowed,
   type EntitlementView,
 } from './entitlement.types';
-import {
-  readRecallOpenAccess,
-  readStubDefaultStatus,
-  readStubGrantAll,
-  StubEntitlementProvider,
-} from './stub-entitlement.provider';
 
+/**
+ * Recall is free — no billing provider. Entitlement checks always allow when
+ * RECALL_ENABLED is on.
+ */
 @Injectable()
 export class EntitlementService {
-  private readonly provider = new StubEntitlementProvider();
-
   constructor(private readonly prisma: PrismaService) {}
 
   async isAllowed(
     userId: string,
     feature: EntitlementFeature = EntitlementFeature.RECALL,
   ): Promise<boolean> {
+    void userId;
+    void feature;
     const view = await this.getEntitlement(userId, feature);
     return view.allowed;
   }
@@ -34,123 +32,23 @@ export class EntitlementService {
     userId: string,
     feature: EntitlementFeature = EntitlementFeature.RECALL,
   ): Promise<EntitlementView> {
+    void userId;
+    void feature;
     if (!isRecallFeatureEnabled()) {
       return denied('disabled');
     }
-
-    // Temporary open access: ignore DB / RevenueCat until these flags are turned off.
-    if (readRecallOpenAccess() || readStubGrantAll()) {
-      return {
-        feature: 'RECALL',
-        status: EntitlementStatus.active,
-        allowed: true,
-        isPro: true,
-        validUntil: null,
-        source: readRecallOpenAccess() ? 'open_access' : 'stub_grant_all',
-        store: null,
-      };
-    }
-
-    const remote = await this.provider.resolveRemote?.(userId, feature);
-    if (remote) {
-      await this.prisma.entitlement.upsert({
-        where: { userId_feature: { userId, feature } },
-        create: {
-          userId,
-          feature,
-          status: remote.status,
-          validUntil: remote.validUntil,
-          isPro: isEntitlementStatusAllowed(remote.status, remote.validUntil),
-          source: remote.source,
-        },
-        update: {
-          status: remote.status,
-          validUntil: remote.validUntil,
-          isPro: isEntitlementStatusAllowed(remote.status, remote.validUntil),
-          source: remote.source,
-        },
-      });
-    }
-
-    const row = await this.prisma.entitlement.findUnique({
-      where: { userId_feature: { userId, feature } },
-    });
-
-    if (row) {
-      return toView(row);
-    }
-
-    const stubDefault = readStubDefaultStatus();
-    if (stubDefault) {
-      const allowed = isEntitlementStatusAllowed(stubDefault, null);
-      return {
-        feature: 'RECALL',
-        status: stubDefault,
-        allowed,
-        isPro: allowed,
-        validUntil: null,
-        source: 'stub_default',
-        store: null,
-      };
-    }
-
-    return denied('none');
+    return {
+      feature: 'RECALL',
+      status: EntitlementStatus.active,
+      allowed: true,
+      isPro: true,
+      validUntil: null,
+      source: 'open',
+      store: null,
+    };
   }
 
-  /**
-   * Writes the Neon Pro row. A snapshot older than `lastEventAt` is dropped so a
-   * late webhook cannot undo a newer store or Stripe update.
-   */
-  async recordBillingSnapshot(params: {
-    userId: string;
-    status: EntitlementStatus;
-    validUntil: Date | null;
-    source: string;
-    store: string | null;
-    productId: string | null;
-    eventAt: Date;
-    feature?: EntitlementFeature;
-  }): Promise<'applied' | 'stale'> {
-    const feature = params.feature ?? EntitlementFeature.RECALL;
-    const existing = await this.prisma.entitlement.findUnique({
-      where: { userId_feature: { userId: params.userId, feature } },
-      select: { lastEventAt: true },
-    });
-    if (
-      existing?.lastEventAt &&
-      existing.lastEventAt.getTime() > params.eventAt.getTime()
-    ) {
-      return 'stale';
-    }
-
-    const isPro = isEntitlementStatusAllowed(params.status, params.validUntil);
-    await this.prisma.entitlement.upsert({
-      where: { userId_feature: { userId: params.userId, feature } },
-      create: {
-        userId: params.userId,
-        feature,
-        status: params.status,
-        validUntil: params.validUntil,
-        isPro,
-        source: params.source,
-        store: params.store,
-        productId: params.productId,
-        lastEventAt: params.eventAt,
-      },
-      update: {
-        status: params.status,
-        validUntil: params.validUntil,
-        isPro,
-        source: params.source,
-        store: params.store,
-        productId: params.productId,
-        lastEventAt: params.eventAt,
-      },
-    });
-    return 'applied';
-  }
-
-  /** Test/admin helper — upserts a DB entitlement row. */
+  /** Test/admin helper — upserts a DB entitlement row (optional bookkeeping). */
   async upsertForUser(params: {
     userId: string;
     feature?: EntitlementFeature;
@@ -192,19 +90,6 @@ function denied(source: string): EntitlementView {
     validUntil: null,
     source,
     store: null,
-  };
-}
-
-function toView(row: Entitlement): EntitlementView {
-  const allowed = isEntitlementStatusAllowed(row.status, row.validUntil);
-  return {
-    feature: 'RECALL',
-    status: allowed ? row.status : EntitlementStatus.expired,
-    allowed,
-    isPro: allowed,
-    validUntil: row.validUntil ? row.validUntil.toISOString() : null,
-    source: row.source,
-    store: row.store,
   };
 }
 

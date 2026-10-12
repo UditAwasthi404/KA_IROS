@@ -20,7 +20,6 @@ import {
 import { useOnboarding } from '../../../providers/OnboardingProvider';
 import { useAppTheme } from '../../../providers/ThemeProvider';
 import { useProgression } from '../../../providers/ProgressionProvider';
-import { useSubscription } from '../../../providers/SubscriptionProvider';
 import { CountUp, PressScale } from '../../../components/ui/Motion';
 import { readQueryCache } from '../../../hooks/useAsync';
 import type { DashboardSummary } from '../../../lib/api';
@@ -46,7 +45,6 @@ export default function ProfileScreen() {
   const { signOut, userId } = useAuth();
   const { resetOnboarding } = useOnboarding();
   const { colors, themeProgress, toggleTheme, radius } = useAppTheme();
-  const subscription = useSubscription();
   const { progression } = useProgression();
   const router = useRouter();
   const [memoryCount, setMemoryCount] = useState(() => readQueryCache<DashboardSummary>('dashboard')?.totalCount ?? null);
@@ -174,41 +172,25 @@ export default function ProfileScreen() {
           ) : null}
         </SurfaceCard>
 
-        {/* Subscription section */}
+        {/* Screen memory */}
         <View style={styles.sectionWrap}>
           <ThemedText colorKey="textMuted" style={styles.sectionLabel}>
-            Subscription
+            Screen memory
           </ThemedText>
           <SoftRow
-            label="Kairos Pro"
-            icon="star"
+            label="Recall"
+            icon="eye"
             meta={
-              subscription.isLoading
-                ? 'Loading'
-                : Platform.OS !== 'android' || !Recall.isAvailable()
-                  ? 'Screen memory is Android only'
-                  : subscription.openAccess
-                    ? 'Open access'
-                    : subscription.isPro
-                      ? 'Active'
-                      : 'Unlock Screen memory'
+              Platform.OS !== 'android' || !Recall.isAvailable()
+                ? 'Android only'
+                : 'Included · free'
             }
             onPress={
-              Platform.OS === 'android' &&
-              Recall.isAvailable() &&
-              !subscription.isPro &&
-              !subscription.openAccess
+              Platform.OS === 'android' && Recall.isAvailable()
                 ? () => router.push('/(app)/screen-memory')
                 : undefined
             }
           />
-          {subscription.isPro && !subscription.openAccess ? (
-            <SoftRow
-              label="Manage Subscription"
-              icon="external-link"
-              onPress={() => void subscription.manageSubscriptions()}
-            />
-          ) : null}
         </View>
 
         {/* Sync Status Card */}

@@ -1556,34 +1556,6 @@ export type RecallEntitlement = {
   store?: string | null;
 };
 
-export async function syncBilling(token: string): Promise<RecallEntitlement> {
-  const response = await apiFetch(`${normalizeBaseUrl(apiBaseUrl)}/billing/sync`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-    },
-  });
-  if (!response.ok) throw await parseError(response);
-  const body = (await response.json()) as { data: RecallEntitlement };
-  return body.data;
-}
-
-export async function createStripeCheckout(
-  token: string,
-): Promise<{ url: string; vendor: 'stripe' }> {
-  const response = await apiFetch(`${normalizeBaseUrl(apiBaseUrl)}/billing/checkout`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/json',
-    },
-  });
-  if (!response.ok) throw await parseError(response);
-  const body = (await response.json()) as { data: { url: string; vendor: 'stripe' } };
-  return body.data;
-}
-
 export type RecallEventResult = {
   clientEventId: string;
   status: 'accepted' | 'deduped' | 'rejected';

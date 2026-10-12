@@ -1,4 +1,3 @@
-import { readStubGrantAll } from '../entitlements/stub-entitlement.provider';
 import { readS3ConfigFromEnv } from '../storage/s3-storage.service';
 
 export type AppEnv = 'development' | 'test' | 'production';
@@ -35,8 +34,6 @@ export function assertProductionConfig(
   requireValue('CLERK_SECRET_KEY');
   requireValue('DATABASE_URL');
   requireValue('DIRECT_URL');
-  requireValue('REVENUECAT_WEBHOOK_AUTHORIZATION');
-  requireValue('REVENUECAT_SECRET_API_KEY');
 
   const storageProvider = (env.STORAGE_PROVIDER ?? '').trim().toLowerCase();
   const s3Config = readS3ConfigFromEnv();
@@ -62,19 +59,6 @@ export function assertProductionConfig(
 
   if ((env.EMBEDDING_PROVIDER ?? '').trim().toLowerCase() === 'local') {
     throw new Error('EMBEDDING_PROVIDER=local is not allowed in production.');
-  }
-
-  if (readStubGrantAll()) {
-    throw new Error(
-      'RECALL_STUB_GRANT_ALL cannot be enabled in production. Use real entitlements.',
-    );
-  }
-
-  const stubDefault = (env.RECALL_STUB_DEFAULT_STATUS ?? '').trim();
-  if (stubDefault && stubDefault !== 'inactive') {
-    throw new Error(
-      'RECALL_STUB_DEFAULT_STATUS cannot grant access in production.',
-    );
   }
 }
 

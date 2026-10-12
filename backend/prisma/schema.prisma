@@ -157,7 +157,7 @@ model Entitlement {
   /// app_store | play_store | stripe | promotional | test_store | amazon | unknown
   store      String?
   productId  String?
-  /// RevenueCat event time, or the subscriber-sync time. Older events are ignored.
+  /// Last billing/admin event time (legacy). Older events were ignored.
   lastEventAt DateTime?
   /// revenuecat | stripe | admin | stub
   source     String            @default("stub")

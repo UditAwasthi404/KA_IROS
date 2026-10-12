@@ -40,9 +40,7 @@ import {
 } from '../../../lib/recallSync';
 import { useAppTheme } from '../../../providers/ThemeProvider';
 import Recall, { type RecallStatus } from 'kairos-recall';
-import { RecallPaywall } from '../../../components/RecallPaywall';
 import { useSubscription } from '../../../providers/SubscriptionProvider';
-import { tabHref } from '../../../lib/lastRoute';
 import { useProgression } from '../../../providers/ProgressionProvider';
 
 function relativeTime(ts: number | null | undefined): string {
@@ -301,14 +299,6 @@ export default function RecallScreen() {
 
   if (subscription.isLoading) {
     return <ScreenGradient><View style={styles.lockedLoading}><ActivityIndicator color={colors.accent} /></View></ScreenGradient>;
-  }
-  if (!subscription.hasRecallAccess) {
-    return (
-      <RecallPaywall
-        onClose={() => router.navigate(tabHref() as '/(app)/(tabs)')}
-        onUnlocked={() => { void refresh(true); }}
-      />
-    );
   }
 
   const toggle = () => {
