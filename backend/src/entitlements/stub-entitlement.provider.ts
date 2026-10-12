@@ -30,6 +30,15 @@ export function readStubGrantAll(): boolean {
   return raw === '1' || raw === 'true' || raw === 'yes';
 }
 
+/**
+ * Temporary open access for demos / Tech Expo.
+ * Allowed in production (unlike RECALL_STUB_GRANT_ALL). Turn off after the event.
+ */
+export function readRecallOpenAccess(): boolean {
+  const raw = (process.env.RECALL_OPEN_ACCESS ?? '').trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes';
+}
+
 export function readStubDefaultStatus(): EntitlementStatus | null {
   const raw = (process.env.RECALL_STUB_DEFAULT_STATUS ?? '')
     .trim()

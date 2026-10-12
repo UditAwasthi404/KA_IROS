@@ -10,6 +10,7 @@ import {
   type EntitlementView,
 } from './entitlement.types';
 import {
+  readRecallOpenAccess,
   readStubDefaultStatus,
   readStubGrantAll,
   StubEntitlementProvider,
@@ -35,6 +36,19 @@ export class EntitlementService {
   ): Promise<EntitlementView> {
     if (!isRecallFeatureEnabled()) {
       return denied('disabled');
+    }
+
+    // Temporary open access: ignore DB / RevenueCat until these flags are turned off.
+    if (readRecallOpenAccess() || readStubGrantAll()) {
+      return {
+        feature: 'RECALL',
+        status: EntitlementStatus.active,
+        allowed: true,
+        isPro: true,
+        validUntil: null,
+        source: readRecallOpenAccess() ? 'open_access' : 'stub_grant_all',
+        store: null,
+      };
     }
 
     const remote = await this.provider.resolveRemote?.(userId, feature);
@@ -64,18 +78,6 @@ export class EntitlementService {
 
     if (row) {
       return toView(row);
-    }
-
-    if (readStubGrantAll()) {
-      return {
-        feature: 'RECALL',
-        status: EntitlementStatus.active,
-        allowed: true,
-        isPro: true,
-        validUntil: null,
-        source: 'stub_grant_all',
-        store: null,
-      };
     }
 
     const stubDefault = readStubDefaultStatus();

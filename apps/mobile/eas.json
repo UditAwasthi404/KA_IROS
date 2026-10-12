@@ -15,14 +15,16 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://kairos-production-774a.up.railway.app/"
+        "EXPO_PUBLIC_API_URL": "https://kairos-production-774a.up.railway.app/",
+        "EXPO_PUBLIC_RECALL_OPEN_ACCESS": "true"
       }
     },
     "production": {
       "autoIncrement": true,
       "environment": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://kairos-production-774a.up.railway.app/"
+        "EXPO_PUBLIC_API_URL": "https://kairos-production-774a.up.railway.app/",
+        "EXPO_PUBLIC_RECALL_OPEN_ACCESS": "true"
       }
     }
   },

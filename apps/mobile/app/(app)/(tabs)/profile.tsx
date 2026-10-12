@@ -187,17 +187,22 @@ export default function ProfileScreen() {
                 ? 'Loading'
                 : Platform.OS !== 'android' || !Recall.isAvailable()
                   ? 'Screen memory is Android only'
-                  : subscription.isPro
-                    ? 'Active'
-                    : 'Unlock Screen memory'
+                  : subscription.openAccess
+                    ? 'Open access'
+                    : subscription.isPro
+                      ? 'Active'
+                      : 'Unlock Screen memory'
             }
             onPress={
-              Platform.OS === 'android' && Recall.isAvailable() && !subscription.isPro
+              Platform.OS === 'android' &&
+              Recall.isAvailable() &&
+              !subscription.isPro &&
+              !subscription.openAccess
                 ? () => router.push('/(app)/screen-memory')
                 : undefined
             }
           />
-          {subscription.isPro ? (
+          {subscription.isPro && !subscription.openAccess ? (
             <SoftRow
               label="Manage Subscription"
               icon="external-link"

@@ -13,6 +13,7 @@ describe('EntitlementService', () => {
   beforeEach(() => {
     process.env.RECALL_ENABLED = 'true';
     delete process.env.RECALL_STUB_GRANT_ALL;
+    delete process.env.RECALL_OPEN_ACCESS;
     delete process.env.RECALL_STUB_DEFAULT_STATUS;
     prisma = {
       entitlement: {
@@ -42,7 +43,7 @@ describe('EntitlementService', () => {
     expect(view.source).toBe('stub_grant_all');
   });
 
-  it('keeps an inactive DB row inactive even when stub grant-all is on', async () => {
+  it('lets stub grant-all override an inactive DB row', async () => {
     process.env.RECALL_STUB_GRANT_ALL = 'true';
     prisma.entitlement.findUnique.mockResolvedValue({
       status: EntitlementStatus.inactive,
@@ -52,8 +53,25 @@ describe('EntitlementService', () => {
       store: null,
     });
     const view = await service.getEntitlement('user_1');
-    expect(view.allowed).toBe(false);
-    expect(view.isPro).toBe(false);
+    expect(view.allowed).toBe(true);
+    expect(view.isPro).toBe(true);
+    expect(view.source).toBe('stub_grant_all');
+    expect(prisma.entitlement.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('lets open access override an inactive DB row', async () => {
+    process.env.RECALL_OPEN_ACCESS = 'true';
+    prisma.entitlement.findUnique.mockResolvedValue({
+      status: EntitlementStatus.inactive,
+      validUntil: null,
+      source: 'revenuecat',
+      feature: EntitlementFeature.RECALL,
+      store: 'test_store',
+    });
+    const view = await service.getEntitlement('user_1');
+    expect(view.allowed).toBe(true);
+    expect(view.source).toBe('open_access');
+    expect(prisma.entitlement.findUnique).not.toHaveBeenCalled();
   });
 
   it('respects DB active entitlement', async () => {

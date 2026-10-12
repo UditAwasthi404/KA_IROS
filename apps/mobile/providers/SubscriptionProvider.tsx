@@ -35,6 +35,8 @@ type SubscriptionContextValue = {
   isLoading: boolean;
   hasRecallAccess: boolean;
   isPro: boolean;
+  /** Temporary open-access mode: no paywall / RevenueCat Test Store. */
+  openAccess: boolean;
   offering: PurchasesOffering | null;
   error: string | null;
   purchase: (
@@ -49,14 +51,22 @@ type SubscriptionContextValue = {
 const SubscriptionContext = createContext<SubscriptionContextValue | null>(
   null,
 );
-const API_KEY = selectRevenueCatApiKey({
-  isDevelopment: __DEV__,
-  platform:
-    Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
-  testStoreKey: process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY,
-  iosApiKey: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
-  androidApiKey: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
-});
+
+/** Temporary: skip paywall / Test Store and treat everyone as Pro. Baked into release APK via eas.json. */
+const OPEN_RECALL_ACCESS =
+  (process.env.EXPO_PUBLIC_RECALL_OPEN_ACCESS ?? '').trim().toLowerCase() ===
+  'true';
+
+const API_KEY = OPEN_RECALL_ACCESS
+  ? undefined
+  : selectRevenueCatApiKey({
+      isDevelopment: __DEV__,
+      platform:
+        Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web',
+      testStoreKey: process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY,
+      iosApiKey: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY,
+      androidApiKey: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
+    });
 
 export function SubscriptionProvider({
   children,
@@ -168,13 +178,20 @@ export function SubscriptionProvider({
           return;
         }
 
+        if (OPEN_RECALL_ACCESS) {
+          setServerPro(true);
+          setServerChecked(true);
+          setOffering(null);
+          setError(null);
+          setIsLoading(false);
+          return;
+        }
+
         if (!API_KEY || Platform.OS === 'web') {
           setError(
             Platform.OS === 'web'
               ? 'Subscriptions are available in the Kairos mobile app.'
-              : __DEV__
-                ? 'Add the RevenueCat Test Store key to the mobile environment to enable subscriptions.'
-                : 'Subscriptions are not configured for this platform.',
+              : 'Subscriptions are not configured for this platform.',
           );
           setIsLoading(false);
           return;
@@ -303,12 +320,16 @@ export function SubscriptionProvider({
     }
   }, [refresh]);
 
-  const hasRecallAccess = serverPro;
+  const hasRecallAccess = OPEN_RECALL_ACCESS || serverPro;
   const value = useMemo(
     () => ({
-      isLoading: !isLoaded || isLoading || (Boolean(isSignedIn) && !serverChecked),
+      isLoading:
+        !isLoaded ||
+        isLoading ||
+        (Boolean(isSignedIn) && !OPEN_RECALL_ACCESS && !serverChecked),
       hasRecallAccess,
       isPro: hasRecallAccess,
+      openAccess: OPEN_RECALL_ACCESS,
       offering,
       error,
       purchase,
